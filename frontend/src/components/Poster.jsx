@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../utils/Utils';
 
 const Poster = () => {
@@ -8,9 +8,12 @@ const Poster = () => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
+    const [isSubmit, setIsSubmit] = useState(false);
+    const canvasRef = useRef(null);
 
     useEffect(() => {
         console.log(name, dob, avatar);
+        console.log(canvasRef.current);
     }, [name, dob, avatar]);
 
     const onSubmit = (e) => {
@@ -22,24 +25,40 @@ const Poster = () => {
             }, 3000);
         } else {
             setLoading(true);
-            api('api/v1', 'post', { name, dob, avatar }, true)
-                .then((res) => {
-                    console.log(res.data);
-                })
-                .catch((e) => {
-                    setError(e);
-                })
-                .finally(() => {
-                    setLoading(false);
-                });
+            const ctx = canvasRef.current.getContext('2d');
+            const posterImage = new Image();
+            posterImage.src = '/images/poster.jpeg'; // Replace with your poster image URL
+            posterImage.onload = () => {
+                ctx.drawImage(posterImage, 0, 0, canvasRef.current.width, canvasRef.current.height);
+                ctx.font = '900 36px Poppins'; // Example font style
+                ctx.fillStyle = '#aa634f'; // Example text color
+                ctx.fillText(name, 190, 500); // Example text position
+                ctx.fillText(dob, 183, 200); // Example text position
+                const avatarImage = new Image();
+                avatarImage.src = URL.createObjectURL(avatar);
+                avatarImage.onload = () => {
+                    ctx.drawImage(avatarImage, 187, 227, 220, 220); // Example avatar position and size
+                    const dataUrl = canvasRef.current.toDataURL('image/jpeg');
+                    api('api/v1', 'post', { name: name, dob: dob, avatar: avatar }, true) // Example API call to save the image
+                        .then((res) => {
+                            console.log(res.data);
+                            setIsSubmit(true);
+                        })
+                        .catch((e) => {
+                            setError(e);
+                            setIsSubmit(false);
+                        })
+                        .finally(() => {
+                            setLoading(false);
+                        });
+                };
+            };
         }
     }
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         setAvatar(file);
-
-        // Display selected image
         const reader = new FileReader();
         reader.onload = () => {
             setSelectedImage(reader.result);
@@ -50,7 +69,7 @@ const Poster = () => {
     return (
         <div className='block md:flex justify-evenly items-center'>
             <div className='max:w-[35rem] min:w-[20rem] xl:w-[35rem]'>
-                <h1 className='text-4xl font-extrabold text-slate-800 text-center my-8' style={{ fontFamily: '"Dancing Script", cursive' }}>Birthday poster</h1>
+                <h1 className='text-4xl font-extrabold text-slate-800 text-center py-8' style={{ fontFamily: '"Dancing Script", cursive' }}>Birthday poster</h1>
                 <form className='p-6'>
                     {error !== "" && <p className='text-red-600 text-xs mb-2'>*{error}</p>}
                     {selectedImage && <img className="m-auto rounded-full w-48 h-48 mb-6" src={selectedImage || "/images/blank.jpeg"} alt="Selected Image" />}
@@ -82,7 +101,8 @@ const Poster = () => {
                 </form>
             </div>
             <div>
-                <img className='shadow-xl mt-12 sm:h-[400px] md:h-[550px] lg:h-[800px] object-contain rounded-2xl' src="/images/poster.jpeg" alt="" />
+                
+                <canvas ref={canvasRef} className='shadow-xl mt-12 sm:h-[400px] md:h-[550px] lg:h-[800px] object-contain rounded-2xl' width={600} height={800} />
             </div>
         </div>
     );
