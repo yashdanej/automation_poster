@@ -13,8 +13,14 @@ import { useContext } from 'react';
 import { api, changeText } from '../utils/Utils';
 import { useEffect } from 'react';
 import SnackbarWithDecorators from '../utils/SnackbarWithDecorators';
+import { useState } from 'react';
 
-export default function SelectFile({open, setOpen, xlsxFile, setXlsxFile, snackAlert, setSnackAlert, snackbarProperty, setSnackbarProperty, loading, setLoading}) {
+export default function SelectFile({open, setOpen, xlsxFile, setXlsxFile, loading, setLoading, setIsSubmit}) {
+    const [snackAlert, setSnackAlert] = useState(false); // popup success or error
+    const [snackbarProperty, setSnackbarProperty] = useState({ // popup success or error text
+        text: '',
+        color: ''
+    });
     const OnSubmit = () => {
         setLoading(true);
         api(`api/v1/xlsx`, "post", {'file': xlsxFile}, true)
@@ -25,6 +31,10 @@ export default function SelectFile({open, setOpen, xlsxFile, setXlsxFile, snackA
                 color: "success"
               }));
             setSnackAlert(true);
+            setIsSubmit(true);
+            setTimeout(() => {
+                setIsSubmit(false);
+            }, 5000);
         })
         .catch((e) => {
             console.log('error', e);
@@ -41,6 +51,9 @@ export default function SelectFile({open, setOpen, xlsxFile, setXlsxFile, snackA
     }
   return (
     <React.Fragment>
+        {
+            snackAlert && <SnackbarWithDecorators snackAlert={snackAlert} setSnackAlert={setSnackAlert} text={snackbarProperty.text} color={snackbarProperty.color}  />
+        }
       <Modal open={open} onClose={() => setOpen(false)}>
         <ModalDialog>
           <DialogTitle>Select file to upload</DialogTitle>

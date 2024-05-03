@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../utils/Utils';
 import axios from 'axios';
 import SelectFile from './SelectFile';
+import { useNavigate } from 'react-router-dom';
+import SnackbarWithDecorators from '../utils/SnackbarWithDecorators';
 
 const Poster = () => {
     const [name, setName] = useState("");
@@ -20,10 +22,14 @@ const Poster = () => {
         text: '',
         color: ''
     });
-
+    const navigate = useNavigate();
+    
     useEffect(() => {
-        console.log(name, dob, avatar);
-        console.log(canvasRef.current);
+        const is_logged = localStorage.getItem("poster_is_logged_in");
+        if(!is_logged){
+            navigate('/');
+        }
+        console.log(is_logged);
     }, [name, dob, avatar]);
 
     const onSubmit = (e) => {
@@ -38,7 +44,24 @@ const Poster = () => {
             api('api/v1', 'post', { name: name, phone:phone , dob: dob, avatar: avatar }, true) // Example API call to save the image
             .then((res) => {
                 console.log(res.data);
-                setIsSubmit(true);
+                setSnackbarProperty(prevState => ({
+                    ...prevState,
+                    text: "Data added successfully!",
+                    color: "success"
+                  }));
+                setSnackAlert(true);
+            })
+            .catch((e) => {
+                setSnackbarProperty(prevState => ({
+                    ...prevState,
+                    text: "Error in adding data!",
+                    color: "danger"
+                  }));
+                setSnackAlert(true);
+                console.log(e);
+            })
+            .finally(() => {
+                setLoading(false);
             });
         };
     }
@@ -55,6 +78,9 @@ const Poster = () => {
 
     return (
         <div className='flex justify-center h-[100vh] items-center'>
+            {
+            snackAlert && <SnackbarWithDecorators snackAlert={snackAlert} setSnackAlert={setSnackAlert} text={snackbarProperty.text} color={snackbarProperty.color}  />
+            }
             <div className='max:w-[35rem] min:w-[20rem] xl:w-[35rem]'>
                 <h1 className='text-4xl font-extrabold text-slate-800 text-center py-8' style={{ fontFamily: '"Dancing Script", cursive' }}>Birthday poster</h1>
                 <form className='p-6'>
@@ -89,8 +115,10 @@ const Poster = () => {
                         </div>
                     </div>
                     <button onClick={onSubmit} type="submit" className="text-white bg-slate-900 hover:bg-slate-950 focus:ring-slate-950 font-medium rounded-lg text-sm w-full  px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
-                    <button onClick={() => setOpen(true)} className='text-white bg-slate-900 hover:bg-slate-950 focus:ring-slate-950 font-medium rounded-lg text-sm w-full  px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'>Upload</button>
-                    {open && <SelectFile loading={loading} setLoading={setLoading} setSnackbarProperty={setSnackbarProperty} snackbarProperty={snackbarProperty} setSnackAlert={setSnackAlert} snackAlert={snackAlert} setXlsxFile={setXlsxFile} xlsxFile={xlsxFile} open={open} setOpen={setOpen} />}
+                    <button onClick={() => setOpen(true)} className='my-2 text-white bg-red-800 hover:bg-red-900 focus:ring-red-900 font-medium rounded-lg text-sm w-full  px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'>Upload</button>
+                    {loading && "Loading..."}
+                    {open && <SelectFile setIsSubmit={setIsSubmit} loading={loading} setLoading={setLoading} setSnackbarProperty={setSnackbarProperty} snackbarProperty={snackbarProperty} setSnackAlert={setSnackAlert} snackAlert={snackAlert} setXlsxFile={setXlsxFile} xlsxFile={xlsxFile} open={open} setOpen={setOpen} />}
+                    {isSubmit && "All data of excel file has been added successfully!" }
                 </form>
             </div>
             {/* <div>

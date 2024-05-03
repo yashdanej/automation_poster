@@ -14,6 +14,8 @@ const { users } = require("./model/user");
 const { sendWhatsAppMessage, createPosterCanvas } = require("./controller/userController");
 
 app.use("/api/v1", userRouter.router);
+// * * * * * --> every minute
+// 0 0 * * * --> everyday 12 AM
 schedule.scheduleJob('0 0 * * *', async () => {
     try {
         // Get current month and day in MM-DD format
