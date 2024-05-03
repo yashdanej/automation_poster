@@ -10,6 +10,10 @@ const UserSchema = new Schema({
         type: Date,
         require: true
     },
+    phone: {
+        type: String,
+        require: true
+    },
     avatar: {
         public_id: {
             type: String,

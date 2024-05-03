@@ -1,16 +1,25 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../utils/Utils';
 import axios from 'axios';
+import SelectFile from './SelectFile';
 
 const Poster = () => {
     const [name, setName] = useState("");
     const [dob, setDob] = useState("");
+    const [phone, setPhoneb] = useState();
     const [avatar, setAvatar] = useState(null);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [isSubmit, setIsSubmit] = useState(false);
     const canvasRef = useRef(null);
+    const [open, setOpen] = React.useState(false);
+    const [xlsxFile, setXlsxFile] = useState(null);
+    const [snackAlert, setSnackAlert] = useState(false); // popup success or error
+    const [snackbarProperty, setSnackbarProperty] = useState({ // popup success or error text
+        text: '',
+        color: ''
+    });
 
     useEffect(() => {
         console.log(name, dob, avatar);
@@ -26,69 +35,12 @@ const Poster = () => {
             }, 3000);
         } else {
             setLoading(true);
-            const ctx = canvasRef.current.getContext('2d');
-            const posterImage = new Image();
-            posterImage.src = '/images/poster.jpeg'; // Replace with your poster image URL
-            console.log('posterImage.src', posterImage.src);
-            posterImage.onload = () => {
-                ctx.drawImage(posterImage, 0, 0, canvasRef.current.width, canvasRef.current.height);
-                console.log('posterImage', posterImage);
-                ctx.font = '900 36px Poppins'; // Example font style
-                ctx.fillStyle = '#aa634f'; // Example text color
-                
-                // Calculate text width to center it
-                const nameWidth = ctx.measureText(name).width;
-                const nameX = (canvasRef.current.width - nameWidth) / 2;
-    
-                // Draw name text
-                ctx.fillText(name, nameX, 500); // Example text position
-    
-                // Calculate text width to center it
-                const dobWidth = ctx.measureText(dob).width;
-                const dobX = (canvasRef.current.width - dobWidth) / 2;
-    
-                // Draw dob text
-                ctx.fillText(dob, dobX, 200); // Example text position
-                
-                const avatarImage = new Image();
-                avatarImage.src = URL.createObjectURL(avatar);
-                avatarImage.onload = () => {
-                    ctx.drawImage(avatarImage, 187, 227, 220, 220); // Example avatar position and size
-                    const dataUrl = canvasRef.current.toDataURL('image/jpeg');
-                    canvasRef.current.toBlob((blob) => {
-                        api('api/v1', 'post', { name: name, dob: dob, avatar: avatar }, true) // Example API call to save the image
-                            .then((res) => {
-                                console.log(res.data);
-                                setIsSubmit(true);
-                                // const formData = new FormData();
-                                // formData.append('authToken', 'U2FsdGVkX1/ug0OBB0k7o4i/C2fLQsC26whfAOfewPWDHATb0kdL+QElsbtYMiNQVH8PdYc3PpS+TG4P6S6dMACPuoX49vhOnirOfCPMtNy7//x+w9Jk8boA4nOCzTpfar6mPF/wExPqByo7EdjoF+UWqZrCB6iIYd2PRjIU1t1z3WNyUAhSk1t/zKMRvVgU');
-                                // formData.append('name', "test_" + name);
-                                // formData.append('sendto', '919106253017');
-                                // formData.append('originWebsite', 'https://myinvented.com/');
-                                // formData.append('templateName', 'poster');
-                                // formData.append('language', 'en');
-                                // formData.append('myfile', blob, 'canvas_image.jpeg');
-                                // axios({
-                                //     url: 'https://app.11za.in/apis/template/sendTemplate',
-                                //     method: 'post',
-                                //     data: formData,
-                                //     headers: {
-                                //         'Content-Type': 'multipart/form-data'
-                                //     }
-                                // })
-                                // .catch((e) => {
-                                //     setError(e);
-                                //     setIsSubmit(false);
-                                // })
-                                // .finally(() => {
-                                //     setLoading(false);
-                                // });
-                                
-                            })
-                        });
-                };
-            }
-        }
+            api('api/v1', 'post', { name: name, phone:phone , dob: dob, avatar: avatar }, true) // Example API call to save the image
+            .then((res) => {
+                console.log(res.data);
+                setIsSubmit(true);
+            });
+        };
     }
     
     const handleImageChange = (e) => {
@@ -102,7 +54,7 @@ const Poster = () => {
     }
 
     return (
-        <div className='block md:flex justify-evenly items-center'>
+        <div className='flex justify-center h-[100vh] items-center'>
             <div className='max:w-[35rem] min:w-[20rem] xl:w-[35rem]'>
                 <h1 className='text-4xl font-extrabold text-slate-800 text-center py-8' style={{ fontFamily: '"Dancing Script", cursive' }}>Birthday poster</h1>
                 <form className='p-6'>
@@ -118,7 +70,11 @@ const Poster = () => {
                             <input onChange={(e) => setDob(e.target.value)} name='dob' type="date" id="last_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Doe" required />
                         </div>
                     </div>
-                    <div className="mb-6">
+                        <div>
+                            <label htmlFor="last_name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
+                            <input placeholder="Your phone number" onChange={(e) => setPhoneb(e.target.value)} value={phone} name='dob' type="number" id="last_name" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required />
+                        </div>
+                    <div className="mb-6 mt-2">
                         <div className="flex items-center justify-center w-full">
                             <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -133,12 +89,14 @@ const Poster = () => {
                         </div>
                     </div>
                     <button onClick={onSubmit} type="submit" className="text-white bg-slate-900 hover:bg-slate-950 focus:ring-slate-950 font-medium rounded-lg text-sm w-full  px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
+                    <button onClick={() => setOpen(true)} className='text-white bg-slate-900 hover:bg-slate-950 focus:ring-slate-950 font-medium rounded-lg text-sm w-full  px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'>Upload</button>
+                    {open && <SelectFile loading={loading} setLoading={setLoading} setSnackbarProperty={setSnackbarProperty} snackbarProperty={snackbarProperty} setSnackAlert={setSnackAlert} snackAlert={snackAlert} setXlsxFile={setXlsxFile} xlsxFile={xlsxFile} open={open} setOpen={setOpen} />}
                 </form>
             </div>
-            <div>
+            {/* <div>
                 
                 <canvas ref={canvasRef} className='shadow-xl mt-12 sm:h-[400px] md:h-[550px] lg:h-[800px] object-contain rounded-2xl' width={600} height={800} />
-            </div>
+            </div> */}
         </div>
     );
 }

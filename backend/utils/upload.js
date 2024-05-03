@@ -27,4 +27,6 @@ var upload = multer({
   }
 })
 
-module.exports = {upload};
+const xlsxUpload = multer({storage: storage});
+
+module.exports = {upload, xlsxUpload};
