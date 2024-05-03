@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { api } from '../utils/Utils';
+import axios from 'axios';
 
 const Poster = () => {
     const [name, setName] = useState("");
@@ -28,34 +29,68 @@ const Poster = () => {
             const ctx = canvasRef.current.getContext('2d');
             const posterImage = new Image();
             posterImage.src = '/images/poster.jpeg'; // Replace with your poster image URL
+            console.log('posterImage.src', posterImage.src);
             posterImage.onload = () => {
                 ctx.drawImage(posterImage, 0, 0, canvasRef.current.width, canvasRef.current.height);
+                console.log('posterImage', posterImage);
                 ctx.font = '900 36px Poppins'; // Example font style
                 ctx.fillStyle = '#aa634f'; // Example text color
-                ctx.fillText(name, 190, 500); // Example text position
-                ctx.fillText(dob, 183, 200); // Example text position
+                
+                // Calculate text width to center it
+                const nameWidth = ctx.measureText(name).width;
+                const nameX = (canvasRef.current.width - nameWidth) / 2;
+    
+                // Draw name text
+                ctx.fillText(name, nameX, 500); // Example text position
+    
+                // Calculate text width to center it
+                const dobWidth = ctx.measureText(dob).width;
+                const dobX = (canvasRef.current.width - dobWidth) / 2;
+    
+                // Draw dob text
+                ctx.fillText(dob, dobX, 200); // Example text position
+                
                 const avatarImage = new Image();
                 avatarImage.src = URL.createObjectURL(avatar);
                 avatarImage.onload = () => {
                     ctx.drawImage(avatarImage, 187, 227, 220, 220); // Example avatar position and size
                     const dataUrl = canvasRef.current.toDataURL('image/jpeg');
-                    api('api/v1', 'post', { name: name, dob: dob, avatar: avatar }, true) // Example API call to save the image
-                        .then((res) => {
-                            console.log(res.data);
-                            setIsSubmit(true);
-                        })
-                        .catch((e) => {
-                            setError(e);
-                            setIsSubmit(false);
-                        })
-                        .finally(() => {
-                            setLoading(false);
+                    canvasRef.current.toBlob((blob) => {
+                        api('api/v1', 'post', { name: name, dob: dob, avatar: avatar }, true) // Example API call to save the image
+                            .then((res) => {
+                                console.log(res.data);
+                                setIsSubmit(true);
+                                // const formData = new FormData();
+                                // formData.append('authToken', 'U2FsdGVkX1/ug0OBB0k7o4i/C2fLQsC26whfAOfewPWDHATb0kdL+QElsbtYMiNQVH8PdYc3PpS+TG4P6S6dMACPuoX49vhOnirOfCPMtNy7//x+w9Jk8boA4nOCzTpfar6mPF/wExPqByo7EdjoF+UWqZrCB6iIYd2PRjIU1t1z3WNyUAhSk1t/zKMRvVgU');
+                                // formData.append('name', "test_" + name);
+                                // formData.append('sendto', '919106253017');
+                                // formData.append('originWebsite', 'https://myinvented.com/');
+                                // formData.append('templateName', 'poster');
+                                // formData.append('language', 'en');
+                                // formData.append('myfile', blob, 'canvas_image.jpeg');
+                                // axios({
+                                //     url: 'https://app.11za.in/apis/template/sendTemplate',
+                                //     method: 'post',
+                                //     data: formData,
+                                //     headers: {
+                                //         'Content-Type': 'multipart/form-data'
+                                //     }
+                                // })
+                                // .catch((e) => {
+                                //     setError(e);
+                                //     setIsSubmit(false);
+                                // })
+                                // .finally(() => {
+                                //     setLoading(false);
+                                // });
+                                
+                            })
                         });
                 };
-            };
+            }
         }
     }
-
+    
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         setAvatar(file);
